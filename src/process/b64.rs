@@ -6,7 +6,7 @@ use base64::{
     Engine,
 };
 
-use crate::cli::Base64Format;
+use crate::{cli::Base64Format, get_reader};
 
 pub fn process_encode(input: &str, format: Base64Format) -> Result<(), Error> {
     // 从文件或标准输入读取
@@ -29,13 +29,7 @@ pub fn process_encode(input: &str, format: Base64Format) -> Result<(), Error> {
 }
 
 pub fn process_decode(input: &str, format: Base64Format) -> Result<(), Error> {
-    // 从文件或标准输入读取
-    let mut reader: Box<dyn Read> = if input == "-" {
-        eprintln!("Reading from stdin. Type your content and press Ctrl+D (Unix) or Ctrl+Z (Windows) when done.");
-        Box::new(std::io::stdin())
-    } else {
-        Box::new(File::open(input)?)
-    };
+    let mut reader = get_reader(input)?;
 
     let mut buf = String::new();
     reader.read_to_string(&mut buf)?;

@@ -2,11 +2,15 @@
 
 use clap::Parser;
 use rcli::{
-    process_csv, process_decode, process_encode, process_genpass, Base64SubCommand, Opts,
-    SubCommand,
+    process_csv, process_decode, process_encode, process_genpass, process_http_serve, process_sign,
+    Base64SubCommand, HttpSubCommand, Opts, SubCommand, TextSubCommand,
 };
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    std::env::set_var("RUST_LOG", "info");
+    tracing_subscriber::fmt::init();
+
     let opts = Opts::parse();
     match opts.cmd {
         SubCommand::Csv(opts) => {
@@ -33,6 +37,19 @@ fn main() -> anyhow::Result<()> {
 
             Base64SubCommand::Decode(opts) => {
                 process_decode(&opts.input, opts.format)?;
+            }
+        },
+        SubCommand::Text(opts) => match opts {
+            TextSubCommand::Sign(opts) => {
+                process_sign(&opts.input, &opts.key, opts.format)?;
+            }
+            TextSubCommand::Verify(_opts) => {
+                todo!()
+            }
+        },
+        SubCommand::Http(opts) => match opts {
+            HttpSubCommand::Serve(opts) => {
+                process_http_serve(opts.dir.into(), opts.port).await?;
             }
         },
     }
